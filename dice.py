@@ -41,12 +41,11 @@ def makeDic():
 def computeScore(selection):
   selection=[0]+selection
   score=0
-  flush6=False
   flush=False
-  if(selection[1]>0 and selection[2]>0 and selection[3]>0 and selection[4]>0 and selection[5]>0 and selection[6]>0):score+=1500;flush=True;flush6=True;
+  if(selection[1]>0 and selection[2]>0 and selection[3]>0 and selection[4]>0 and selection[5]>0 and selection[6]>0):score+=1500;flush=True
   else:
     if(selection[1]>0 and selection[2]>0 and selection[3]>0 and selection[4]>0 and selection[5]>0):score+=750;flush=True
-    if(selection[2]>0 and selection[3]>0 and selection[4]>0 and selection[5]>0 and selection[6]>0):score+=750;flush=True;flush6=True
+    if(selection[2]>0 and selection[3]>0 and selection[4]>0 and selection[5]>0 and selection[6]>0):score+=750;flush=True
   
   if(selection[1]>2): score+=1000*(2**(selection[1]-3))
   else: 
@@ -72,11 +71,11 @@ def computeScore(selection):
   
   if(selection[6]>2): score+=600*(2**(selection[6]-3))
   else:
-    if(selection[6]>0 and flush6==False): return 0
+    if(selection[6]>0 and flush==False): return 0
 
   return score
 
 if __name__ == "__main__":
   d=makeDic()
   computeScore(throwDice(6))
-  print(computeScore([6,0,0,0,0,0]))
+  print(computeScore([3,0,0,0,0,1]))
