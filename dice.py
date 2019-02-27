@@ -75,7 +75,14 @@ def computeScore(selection):
 
   return score
 
+def showDice(dice):
+  res=[]
+  for die in dice:
+    res+=["\u2680"]
+  return res
+
 if __name__ == "__main__":
   d=makeDic()
   computeScore(throwDice(6))
   print(computeScore([3,0,0,0,0,1]))
+  print(showDice([1,1]))
