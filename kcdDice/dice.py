@@ -73,6 +73,31 @@ style = style_from_dict({
 #answers = prompt(questions, style=style)
 #pprint(answers)
 
+def printRules():
+  print('===================================================================================')
+  print('USE THE ARROWS AND THE SPACE TO SELECT THE DICE, PRESS ENTER TO CONFIRM YOUR ACTION')
+  print('THIS GAME IS PLAYED WITH 6 DICE')
+  print('YOU WILL HAVE 2 SCORES, THE GLOBAL SCORE AND THE TURN SCORE')
+  print('YOUR OBJECTIVE IS TO SCORE 4000 POINTS IN THE GLOBAL SCORE BEFORE YOUR RIVAL')
+  print('SCORING SYSTEM:')
+  print('ROLLING 1-2-3-4-5 OR 2-3-4-5-6 IS WORTH 750 POINTS')
+  print('ROLLING 1-2-3-4-5-6 IS WORTH 1500 POINTS')
+  print('A SINGLE ROLL OF 1 IS WORTH 100 POINTS')
+  print('A SINGLE ROLL OF 5 IS WORTH 50 POINTS')
+  print('3 ROLLS OF THE SAME NUMBER[2-6] ARE WORTH 100*THAT_NUMBER POINTS')
+  print('EG. ROLLING 4-4-4 IS WORTH 400 POINTS')
+  print('3 ROLLS OF 1 ARE WORTH 1000 POINTS')
+  print('EACH ROLL OF THE SAME NUMBER AFTER THE THIRD ONE DOUBLES THE SCORE OF THE 3 ROLLS')
+  print('EG. ROLLING 4-4-4-4 IS WORTH 800 POINTS AND ROLLING 4-4-4-4-4 IS WORTH 1600 POINTS')
+  print('THIS ROLLS OF 3 TO 6 OF THE SAME NUMBER MUST BE MADE IN THE SAME THROW')
+  print('AFTER DECIDING WHICH DICE YOU KEEP, YOU CAN REROLL THE UNUSED ONES, OR SKIP THE TURN')
+  print('YOU CAN REROLL AS LONG AS YOU HAVE DICE UNUSED')
+  print('EACH TIME YOU THROW THE DICE, YOU MUST SCORE POINTS')
+  print('IF YOU DO NOT SCORE IN A THROW, YOU ARE BUSTED')
+  print('IF YOU ARE BUSTED YOUR TURN SCORE BECOMES 0 AND YOUR TURN ENDS')
+  print('IF YOU SCORE WITH ALL OF YOUR DICE, YOU REROLL ALL OF THEM AGAIN')
+  print('===================================================================================')
+
 def rollDice(num_dices):
   res=[]
   for i in range(num_dices):res.append(random.randint(1,6))
@@ -261,7 +286,7 @@ def getAnswers5(rolled):
         {
           'name': 'die 5: '+str(rolled[4])
         },
-        Separator('= Keep score or roll again? ='),
+        Separator('= Keep score or roll again? (please select only one) ='),
         {
           'name': 'keep',
           'checked': True
@@ -447,4 +472,5 @@ def newGame(maxScore,mode):
         p2score+=playerTurn(p2score)
 
 if __name__ == "__main__":
-  newGame(1000,True)
+  printRules()
+  newGame(4000,True)
