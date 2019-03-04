@@ -5,6 +5,7 @@ from __future__ import print_function, unicode_literals
 import random
 from PyInquirer import style_from_dict, Token, prompt, Separator
 from pprint import pprint
+from sys import exit
 
 style = style_from_dict({
     Token.Separator: '#cc5454',
@@ -115,40 +116,39 @@ def initDic():
   for d1 in range(1,7):
     x[d1-1]+=1
     d[1][tuple(x)]={}
-    print(combineRoll(x))
     for item in combineRoll(x):
-      d[1][tuple(x)][tuple([False]+item)]=0#computeScore(item)
-      d[1][tuple(x)][tuple([True]+item)]=0#computeScore(item)
+      d[1][tuple(x)][tuple([False]+item)]=computeScore(item)
+      d[1][tuple(x)][tuple([True]+item)]=computeScore(item)
     for d2 in range(1,7):
       x[d2-1]+=1
       d[2][tuple(x)]={}
       for item in combineRoll(x):
-        d[2][tuple(x)][tuple([False]+item)]=0#computeScore(item)
-        d[2][tuple(x)][tuple([True]+item)]=0#computeScore(item)
+        d[2][tuple(x)][tuple([False]+item)]=computeScore(item)
+        d[2][tuple(x)][tuple([True]+item)]=computeScore(item)
       for d3 in range(1,7):
         x[d3-1]+=1
         d[3][tuple(x)]={}
         for item in combineRoll(x):
-          d[3][tuple(x)][tuple([False]+item)]=0#computeScore(item)
-          d[3][tuple(x)][tuple([True]+item)]=0#computeScore(item)
+          d[3][tuple(x)][tuple([False]+item)]=computeScore(item)
+          d[3][tuple(x)][tuple([True]+item)]=computeScore(item)
         for d4 in range(1,7):
           x[d4-1]+=1
           d[4][tuple(x)]={}
           for item in combineRoll(x):
-            d[4][tuple(x)][tuple([False]+item)]=0#computeScore(item)
-            d[4][tuple(x)][tuple([True]+item)]=0#computeScore(item)
+            d[4][tuple(x)][tuple([False]+item)]=computeScore(item)
+            d[4][tuple(x)][tuple([True]+item)]=computeScore(item)
           for d5 in range(1,7):
             x[d5-1]+=1
             d[5][tuple(x)]={}
             for item in combineRoll(x):
-              d[5][tuple(x)][tuple([False]+item)]=0#computeScore(item)
-              d[5][tuple(x)][tuple([True]+item)]=0#computeScore(item)
+              d[5][tuple(x)][tuple([False]+item)]=computeScore(item)
+              d[5][tuple(x)][tuple([True]+item)]=computeScore(item)
             for d6 in range(1,7):
               x[d6-1]+=1
               d[6][tuple(x)]={}
               for item in combineRoll(x):
-                d[6][tuple(x)][tuple([False]+item)]=0#computeScore(item)
-                d[6][tuple(x)][tuple([True]+item)]=0#computeScore(item)
+                d[6][tuple(x)][tuple([False]+item)]=computeScore(item)
+                d[6][tuple(x)][tuple([True]+item)]=computeScore(item)
               x[d6-1]-=1
             x[d5-1]-=1
           x[d4-1]-=1
@@ -158,6 +158,7 @@ def initDic():
   return d
 
 def computeScore(selection):
+  #print(selection)
   selection=[0]+selection
   score=0
   flush=False
@@ -169,28 +170,32 @@ def computeScore(selection):
   if(selection[1]>2): score+=1000*(2**(selection[1]-3))
   else: 
     score+=100*selection[1]
-    if(flush): score-=100
+    if(flush): score-=100*(selection[1]-1)
   
   if(selection[2]>2): score+=200*(2**(selection[2]-3))
   else:
-    if(selection[2]>0 and flush==False):return 0
+    if(selection[2]==1 and flush==False):return 0
+    if(selection[2]==2):return 0
   
   if(selection[3]>2): score+=300*(2**(selection[3]-3))
   else:
-    if(selection[3]>0 and flush==False): return 0
+    if(selection[3]==1 and flush==False): return 0
+    if(selection[3]==2):return 0
   
   if(selection[4]>2): score+=400*(2**(selection[4]-3))
   else:
-    if(selection[4]>0 and flush==False): return 0
+    if(selection[4]==1 and flush==False): return 0
+    if(selection[4]==2):return 0
   
   if(selection[5]>2): score+=500*(2**(selection[5]-3))
   else:
     score+=50*selection[5] 
-    if(flush): score-=50
+    if(flush): score-=50*selection[5]
   
   if(selection[6]>2): score+=600*(2**(selection[6]-3))
   else:
-    if(selection[6]>0 and flush==False): return 0
+    if(selection[6]==1 and flush==False): return 0
+    if(selection[6]==2):return 0
 
   return score
 
@@ -459,27 +464,35 @@ def computerTurn():
   while continuePlay==True:
     rolled=rolled2template(rollDice(diceRemaining))
     answers=computerSelectAction(rolled) #[continue?, #of1s, #of2s, #of3s, #of4s, #of5s, #of6s, #ofDiceSpent]
-    decisions+=[diceRemaining]+[rolled]+[answers] #[diceRolled, 1rolled, 2rolled, 3rolled, 4rolled, 5rolled, 6rolled, continue?, 1kept, 2kept, 3kept, 4kept, 5kept, 6kept, diceSpent]
+    decisions+=[[diceRemaining]+rolled+answers] #[diceRolled, 1rolled, 2rolled, 3rolled, 4rolled, 5rolled, 6rolled, continue?, 1kept, 2kept, 3kept, 4kept, 5kept, 6kept, diceSpent]
     continuePlay=answers[0]
     diceRemaining-=answers[-1]
-    rollScore=computeScore(answers[1:])
+    #print(answers)
+    #print(computeScore(answers[1:7]))
+    rollScore=computeScore(answers[1:7])
     if(rollScore==0):return 0
     else:
       if(diceRemaining==0): diceRemaining=6
       turnScore+=rollScore
-      print('----------------')
-      print('Player Score', playerScore)
-      print('Turn Score: ', turnScore)
-  print(decisions)
+      #print('----------------')
+      #print('Player Score', playerScore)
+      #print('Turn Score: ', turnScore)
+  #print(decisions)
   for decision in decisions: #[diceRolled, 1rolled, 2rolled, 3rolled, 4rolled, 5rolled, 6rolled, continue?, 1kept, 2kept, 3kept, 4kept, 5kept, 6kept, diceSpent]
-    prevValue=rewards[decision[0]][tuple(decision[1:7])][tuple(decision[7,14])]
+    #print(decision)
+    nd=decision[0] #number of dice rolled
+    rll=decision[1:7] #roll
+    slc=decision[7:14] #selection
+    prevValue=rewards[nd][tuple(rll)][tuple(slc)]
     diceRemaining=decision[0]-decision[-1]
-    rewards[decision[0]][tuple(decision[1:7])][tuple(decision[7,14])]=qFunc(prevValue,turnScore,diceRemaining,aplha,gamma)
+    rewards[nd][tuple(rll)][tuple(slc)]=qFunc(prevValue,turnScore,diceRemaining,alfa,gamma)
   return turnScore
 
-def qFunc(prevValue,turnScore,diceSpent,alpha,gamma):
+def qFunc(prevValue,turnScore,diceRemaining,alpha,gamma):
   potential=1000*2**(diceRemaining-3) if diceRemaining>2 else 100*diceRemaining
-  newValue=(1-alpha)*prevValue+alpha*((-1000 if turnScore==0 else turnScore)+gamma*potential)
+  if(turnScore==0): aux=-1000 else: aux=turnScore
+  newValue=(1-alpha)*prevValue+alpha*(aux+gamma*potential)
+  print(newValue)
   return newValue
 
 def computerSelectAction(rolled):
@@ -488,7 +501,7 @@ def computerSelectAction(rolled):
   diceRolled=sum(rolled)
   options=combineRoll(rolled)
   bestOption=[False]+rolled
-  print(rolled)
+  #print(rolled)
   try: bestOptionScore=rewards[diceRolled][rolled][bestOption]
   except: bestOptionScore=0
   for option in combineRoll(rolled):
@@ -498,16 +511,16 @@ def computerSelectAction(rolled):
       if(rewards[diceRolled][rolled][o1]>bestOptionScore):
         bestOption=o1
         bestOptionScore=rewards[diceRolled][rolled][o1]
-    except: 0==0
+    except Exception: pass
     try: 
       if(rewards[diceRolled][rolled][o2]>bestOptionScore):
         bestOption=o2
         bestOptionScore=rewards[diceRolled][rolled][o2]
-    except: 0==0
-  return answers
+    except Exception: pass
+  return bestOption+[sum(bestOption[1:])]
 
 def computerTrain(steps):
-  while steps>0:print(computerTurn());steps-=1
+  while steps>0:print(steps,':=:',computerTurn());steps-=1
 
 def newGame(maxScore,mode):
   p1score=0
@@ -531,13 +544,15 @@ def newGame(maxScore,mode):
         p1score+=computerTurn()
         p2score+=playerTurn(p2score)
 
-alfa=0.1
-gamma=0.2
+alfa=0.5
+gamma=0.0
 rewards=initDic()
 
 if __name__ == "__main__":
-  print(rewards)
+  #print(rewards)
   #printRules()
   computerTrain(10000)
-  print(rewards)
+  #print(rewards)
+  exit(0)
   #newGame(4000,True)
+  #print(computeScore([False,1,1,1,1,1,1,6][1:7]))
