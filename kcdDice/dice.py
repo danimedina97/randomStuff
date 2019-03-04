@@ -115,21 +115,40 @@ def initDic():
   for d1 in range(1,7):
     x[d1-1]+=1
     d[1][tuple(x)]={}
+    print(combineRoll(x))
+    for item in combineRoll(x):
+      d[1][tuple(x)][tuple([False]+item)]=0#computeScore(item)
+      d[1][tuple(x)][tuple([True]+item)]=0#computeScore(item)
     for d2 in range(1,7):
       x[d2-1]+=1
       d[2][tuple(x)]={}
+      for item in combineRoll(x):
+        d[2][tuple(x)][tuple([False]+item)]=0#computeScore(item)
+        d[2][tuple(x)][tuple([True]+item)]=0#computeScore(item)
       for d3 in range(1,7):
         x[d3-1]+=1
         d[3][tuple(x)]={}
+        for item in combineRoll(x):
+          d[3][tuple(x)][tuple([False]+item)]=0#computeScore(item)
+          d[3][tuple(x)][tuple([True]+item)]=0#computeScore(item)
         for d4 in range(1,7):
           x[d4-1]+=1
           d[4][tuple(x)]={}
+          for item in combineRoll(x):
+            d[4][tuple(x)][tuple([False]+item)]=0#computeScore(item)
+            d[4][tuple(x)][tuple([True]+item)]=0#computeScore(item)
           for d5 in range(1,7):
             x[d5-1]+=1
             d[5][tuple(x)]={}
+            for item in combineRoll(x):
+              d[5][tuple(x)][tuple([False]+item)]=0#computeScore(item)
+              d[5][tuple(x)][tuple([True]+item)]=0#computeScore(item)
             for d6 in range(1,7):
               x[d6-1]+=1
               d[6][tuple(x)]={}
+              for item in combineRoll(x):
+                d[6][tuple(x)][tuple([False]+item)]=0#computeScore(item)
+                d[6][tuple(x)][tuple([True]+item)]=0#computeScore(item)
               x[d6-1]-=1
             x[d5-1]-=1
           x[d4-1]-=1
@@ -183,28 +202,14 @@ def showDice(dice):
 
 def combineRoll(roll):
   combinations=[]
-  for i in range(roll[0]):
-    if(len(roll)>1):
-      for j in range(roll[1]):
-        if(len(roll)>2):
-          for k in range(roll[2]):
-            if(len(roll)>3):
-              for l in range(roll[3]):
-                if(len(roll)>4):
-                  for m in range(roll[4]):
-                    if(len(roll)>5):
-                      for n in range(roll[5]):
-                        combinations+=[i,j,k,l,m,n]
-                    else:
-                      combinations+=[i,j,k,l,m]
-                else:
-                  combinations+=[i,j,k,l]
-            else:
-              combinations+=[i,j,k]
-        else:
-          combinations+=[i,j]
-    else:
-      combinations+=[i,j,k,l,m,n]
+  for i in range(roll[0]+1):
+      for j in range(roll[1]+1):
+          for k in range(roll[2]+1):
+              for l in range(roll[3]+1):
+                  for m in range(roll[4]+1):
+                      for n in range(roll[5]+1):
+                        combinations+=[[i,j,k,l,m,n]]
+  #print(combinations)
   return combinations
 
 def computeFitness(selection):
@@ -447,14 +452,69 @@ def playerTurn(playerScore):
   return turnScore
 
 def computerTurn():
-  return null
+  continuePlay=True
+  turnScore=0
+  diceRemaining=6
+  decisions=[]
+  while continuePlay==True:
+    rolled=rolled2template(rollDice(diceRemaining))
+    answers=computerSelectAction(rolled) #[continue?, #of1s, #of2s, #of3s, #of4s, #of5s, #of6s, #ofDiceSpent]
+    decisions+=[diceRemaining]+[rolled]+[answers] #[diceRolled, 1rolled, 2rolled, 3rolled, 4rolled, 5rolled, 6rolled, continue?, 1kept, 2kept, 3kept, 4kept, 5kept, 6kept, diceSpent]
+    continuePlay=answers[0]
+    diceRemaining-=answers[-1]
+    rollScore=computeScore(answers[1:])
+    if(rollScore==0):return 0
+    else:
+      if(diceRemaining==0): diceRemaining=6
+      turnScore+=rollScore
+      print('----------------')
+      print('Player Score', playerScore)
+      print('Turn Score: ', turnScore)
+  print(decisions)
+  for decision in decisions: #[diceRolled, 1rolled, 2rolled, 3rolled, 4rolled, 5rolled, 6rolled, continue?, 1kept, 2kept, 3kept, 4kept, 5kept, 6kept, diceSpent]
+    prevValue=rewards[decision[0]][tuple(decision[1:7])][tuple(decision[7,14])]
+    diceRemaining=decision[0]-decision[-1]
+    rewards[decision[0]][tuple(decision[1:7])][tuple(decision[7,14])]=qFunc(prevValue,turnScore,diceRemaining,aplha,gamma)
+  return turnScore
+
+def qFunc(prevValue,turnScore,diceSpent,alpha,gamma):
+  potential=1000*2**(diceRemaining-3) if diceRemaining>2 else 100*diceRemaining
+  newValue=(1-alpha)*prevValue+alpha*((-1000 if turnScore==0 else turnScore)+gamma*potential)
+  return newValue
+
+def computerSelectAction(rolled):
+  answers=[0,0,0,0,0,0,0,0] #[continue?, #of1s, #of2s, #of3s, #of4s, #of5s, #of6s, #ofDiceSpent]
+  diceSpent=0
+  diceRolled=sum(rolled)
+  options=combineRoll(rolled)
+  bestOption=[False]+rolled
+  print(rolled)
+  try: bestOptionScore=rewards[diceRolled][rolled][bestOption]
+  except: bestOptionScore=0
+  for option in combineRoll(rolled):
+    o1=[True]+option
+    o2=[False]+option
+    try:
+      if(rewards[diceRolled][rolled][o1]>bestOptionScore):
+        bestOption=o1
+        bestOptionScore=rewards[diceRolled][rolled][o1]
+    except: 0==0
+    try: 
+      if(rewards[diceRolled][rolled][o2]>bestOptionScore):
+        bestOption=o2
+        bestOptionScore=rewards[diceRolled][rolled][o2]
+    except: 0==0
+  return answers
+
+def computerTrain(steps):
+  while steps>0:print(computerTurn());steps-=1
 
 def newGame(maxScore,mode):
   p1score=0
   p2score=0
   maxScore=maxScore
   mode=mode #true=PVP, false=PVE
-  if(mode):d=initDic()
+  #if(mode):d=initDic()
   while(p1score<maxScore and p2score<maxScore):
     if(mode):
       print('\n\nplayer 1 turn, score: ', p1score)
@@ -466,11 +526,18 @@ def newGame(maxScore,mode):
     else:
       if(random.randint(1,2)==1):
         p1score+=playerTurn(p1score)
-        p2score+=computerTurn(p2score)
+        p2score+=computerTurn()
       else:
-        p1score+=computerTurn(p1score)
+        p1score+=computerTurn()
         p2score+=playerTurn(p2score)
 
+alfa=0.1
+gamma=0.2
+rewards=initDic()
+
 if __name__ == "__main__":
-  printRules()
-  newGame(4000,True)
+  print(rewards)
+  #printRules()
+  computerTrain(10000)
+  print(rewards)
+  #newGame(4000,True)
