@@ -5,7 +5,7 @@ from __future__ import print_function, unicode_literals
 import random
 from PyInquirer import style_from_dict, Token, prompt, Separator
 from pprint import pprint
-from sys import exit
+from sys import exit,argv
 
 style = style_from_dict({
     Token.Separator: '#cc5454',
@@ -98,6 +98,13 @@ def printRules():
   print('IF YOU ARE BUSTED YOUR TURN SCORE BECOMES 0 AND YOUR TURN ENDS')
   print('IF YOU SCORE WITH ALL OF YOUR DICE, YOU REROLL ALL OF THEM AGAIN')
   print('===================================================================================')
+
+def usage():
+  print('USAGE: python dice.py mode training_steps alfa gamma')
+  print('  1 for PVP 0 for PVE -|                    |    |')
+  print('                       learning rate {0-1} -|    |')
+  print('                 weight given to future actions -|')
+
 
 def rollDice(num_dices):
   res=[]
@@ -214,19 +221,7 @@ def combineRoll(roll):
                   for m in range(roll[4]+1):
                       for n in range(roll[5]+1):
                         combinations+=[[i,j,k,l,m,n]]
-  #print(combinations)
   return combinations
-
-def computeFitness(selection):
-  return computeScore(selection)
-
-def selectDice(roll):
-  slected=[0,0,0,0,0,0]
-  fitness_selected=0
-  for selection in combineRoll(roll):
-    f=computeFitness(selection)
-    if (f>fitness_selected): selected=selection;fitness_selected=f
-  return selected
 
 def formatAnswers(answer):
   res=['roll'==answer[-1]]+[0,0,0,0,0,0,0]
@@ -456,7 +451,7 @@ def playerTurn(playerScore):
       print('Turn Score: ', turnScore)
   return turnScore
 
-def computerTurn():
+def computerTurn(training):
   continuePlay=True
   turnScore=0
   diceRemaining=6
@@ -467,60 +462,47 @@ def computerTurn():
     decisions+=[[diceRemaining]+rolled+answers] #[diceRolled, 1rolled, 2rolled, 3rolled, 4rolled, 5rolled, 6rolled, continue?, 1kept, 2kept, 3kept, 4kept, 5kept, 6kept, diceSpent]
     continuePlay=answers[0]
     diceRemaining-=answers[-1]
-    #print(answers)
-    #print(computeScore(answers[1:7]))
     rollScore=computeScore(answers[1:7])
     if(rollScore==0):return 0
     else:
       if(diceRemaining==0): diceRemaining=6
       turnScore+=rollScore
-      #print('----------------')
-      #print('Player Score', playerScore)
-      #print('Turn Score: ', turnScore)
-  #print(decisions)
   for decision in decisions: #[diceRolled, 1rolled, 2rolled, 3rolled, 4rolled, 5rolled, 6rolled, continue?, 1kept, 2kept, 3kept, 4kept, 5kept, 6kept, diceSpent]
-    #print(decision)
     nd=decision[0] #number of dice rolled
     rll=decision[1:7] #roll
     slc=decision[7:14] #selection
     prevValue=rewards[nd][tuple(rll)][tuple(slc)]
     diceRemaining=decision[0]-decision[-1]
-    rewards[nd][tuple(rll)][tuple(slc)]=qFunc(prevValue,turnScore,diceRemaining,alfa,gamma)
+    if(training):rewards[nd][tuple(rll)][tuple(slc)]=qFunc(prevValue,turnScore,diceRemaining,alfa,gamma)
   return turnScore
 
 def qFunc(prevValue,turnScore,diceRemaining,alpha,gamma):
   potential=1000*2**(diceRemaining-3) if diceRemaining>2 else 100*diceRemaining
-  if(turnScore==0): aux=-1000 else: aux=turnScore
+  aux=0
+  if(turnScore==0): aux-=1000 
+  else: aux=turnScore
   newValue=(1-alpha)*prevValue+alpha*(aux+gamma*potential)
-  print(newValue)
+  #print(newValue)
   return newValue
 
 def computerSelectAction(rolled):
   answers=[0,0,0,0,0,0,0,0] #[continue?, #of1s, #of2s, #of3s, #of4s, #of5s, #of6s, #ofDiceSpent]
   diceSpent=0
   diceRolled=sum(rolled)
-  options=combineRoll(rolled)
   bestOption=[False]+rolled
-  #print(rolled)
-  try: bestOptionScore=rewards[diceRolled][rolled][bestOption]
-  except: bestOptionScore=0
-  for option in combineRoll(rolled):
-    o1=[True]+option
-    o2=[False]+option
-    try:
-      if(rewards[diceRolled][rolled][o1]>bestOptionScore):
-        bestOption=o1
-        bestOptionScore=rewards[diceRolled][rolled][o1]
-    except Exception: pass
-    try: 
-      if(rewards[diceRolled][rolled][o2]>bestOptionScore):
-        bestOption=o2
-        bestOptionScore=rewards[diceRolled][rolled][o2]
-    except Exception: pass
-  return bestOption+[sum(bestOption[1:])]
+  bestOptionScore=computeScore(rolled)
+  for option, optionScore in rewards[diceRolled][tuple(rolled)].items():
+    if(optionScore>bestOptionScore): bestOption=option;bestOptionScore=optionScore
+  #print(rolled,bestOption)
+  return list(bestOption)+[sum(bestOption[1:])]
 
 def computerTrain(steps):
-  while steps>0:print(steps,':=:',computerTurn());steps-=1
+  tot=0
+  for i in range(steps):
+    turn=computerTurn(False)
+    tot+=turn
+  print(tot/steps)
+
 
 def newGame(maxScore,mode):
   p1score=0
@@ -539,19 +521,25 @@ def newGame(maxScore,mode):
     else:
       if(random.randint(1,2)==1):
         p1score+=playerTurn(p1score)
-        p2score+=computerTurn()
+        p2score+=computerTurn(False)
       else:
-        p1score+=computerTurn()
+        p1score+=computerTurn(False)
         p2score+=playerTurn(p2score)
 
 alfa=0.5
-gamma=0.0
+gamma=0.8
+training_steps=1000
 rewards=initDic()
 
 if __name__ == "__main__":
   #print(rewards)
   #printRules()
   computerTrain(10000)
+  if(len(argv)!=5):usage();exit(0)
+  alfa=argv[1]
+  gamma=argv[2]
+  training_steps=argv[3]
+  mode=argv[4]==1
   #print(rewards)
   exit(0)
   #newGame(4000,True)
