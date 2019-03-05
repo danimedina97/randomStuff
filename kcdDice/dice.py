@@ -501,7 +501,23 @@ def computerTrain(steps):
   for i in range(steps):
     turn=computerTurn(False)
     tot+=turn
-  print(tot/steps)
+  return(tot/steps)
+
+def computerTest():
+  res={}
+  i=0.0
+  for i in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]:
+    alfa=i
+    res[i]={}
+    for j in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]:
+      gamma=j
+      res[i][j]={}
+      for k in [1,10,100,1000,10000,100000]:
+        temp=0
+        for m in range(10):temp+=computerTrain(k);print('training: alpha= ',alfa,', gamma= ',gamma,', steps= ',k)
+        print(temp/10)
+        res[i][j][k]=temp/10
+  print(res)
 
 
 def newGame(maxScore,mode):
@@ -526,21 +542,21 @@ def newGame(maxScore,mode):
         p1score+=computerTurn(False)
         p2score+=playerTurn(p2score)
 
-alfa=0.5
-gamma=0.8
-training_steps=1000
-rewards=initDic()
+#alfa=0.5
+#gamma=0.8
+#training_steps=1000
+#rewards={}
 
 if __name__ == "__main__":
-  #print(rewards)
-  #printRules()
-  computerTrain(10000)
   if(len(argv)!=5):usage();exit(0)
-  alfa=argv[1]
-  gamma=argv[2]
-  training_steps=argv[3]
-  mode=argv[4]==1
-  #print(rewards)
+  rewards=initDic()
+  mode=int(argv[1])==1            # 1=PVP 0=PVE
+  training_steps=argv[2]          #          
+  alfa=float(argv[3])               # Learning rate {0-1}
+  gamma=float(argv[4])              # Weight given to future actions
+  if(int(argv[1])==3):computerTest()
+  printRules()
+  if(mode==False):computerTrain(int(training_steps))
   exit(0)
   #newGame(4000,True)
   #print(computeScore([False,1,1,1,1,1,1,6][1:7]))
