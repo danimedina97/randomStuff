@@ -157,11 +157,14 @@ def shoot(player, direction):
   n=list(map(add,st,direction))
   for i in range(gSize):
     if(n[0]<0 or n[1]<0 or n[0]>gSize-1 or n[1]>gSize-1 or grid[n[0]][n[1]]=='X'):break
-    if(grid[n[0]][n[1]] !=' '):hp[int(grid[n[0]][n[1]])-1]-=bulletDmg;print(bcolors.RED+'A PLAYER WAS SHOT IN THE FACE!!'+bcolors.ENDC)
+    if(grid[n[0]][n[1]] !=' '):receiveDamage(int(grid[n[0]][n[1]]),bulletDmg);print(bcolors.RED+'A PLAYER WAS SHOT IN THE FACE!!'+bcolors.ENDC)
     n=list(map(add,n,direction))
 
 def receiveDamage(player,dmg):
+  global isDefending
   if(not isDefending[player-1]):hp[player-1]-=dmg
+  else: print(bcolors.RED+'BUT HE WAS DEFENDING'+bcolors.ENDC)
+
 
 def resolveTurn(actions): 
   #[[(action1,direction),(action2,direction),...,(actionN,direction)],[(action1,direction),(action2,direction),...,(actionN,direction)]]
@@ -175,14 +178,15 @@ def resolveTurn(actions):
     d1=actions[0][i][1]
     a2=actions[1][i][0]
     d2=actions[1][i][1]
+    global isDefending
     isDefending=[a1=='d',a2=='d']
     if(a1=='a' and a2=='a'): 
       if(checkMovement(d1,d2)): advance(1,d1);advance(2,d2)
     else: 
       if(a1=='a'): advance(1,d1)
       if(a2=='a'): advance(2,d2)
-    if(a1=='f'): fist(1,d1)
-    if(a2=='f'): fist(2,d2)
+    if(a1=='w'): fist(1,d1)
+    if(a2=='w'): fist(2,d2)
     if(checkEnded()):endGame(hp.index(max(hp))+1 if max(hp)>0 else 0)
     if(a1=='s'): shoot(1,d1)
     if(a2=='s'): shoot(2,d2)
@@ -221,7 +225,8 @@ def checkEnded():
 
 
 def endGame(player):
-  print('PLAYER',player,'WON!!!')
+  if(player==0):print('IT\'S A DRAW')
+  else: print('PLAYER',player,'WON!!!')
   exit(0)
 
 gSize=5
@@ -233,6 +238,7 @@ bulletDmg=3
 fistDmg=6
 nActions=5
 clear='\n'*100
+isDefending=[False,False]
 
 if __name__ == "__main__":
   newGame()
