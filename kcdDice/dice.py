@@ -124,38 +124,44 @@ def initDic():
     x[d1-1]+=1
     d[1][tuple(x)]={}
     for item in combineRoll(x):
-      d[1][tuple(x)][tuple([False]+item)]=computeScore(item)
-      d[1][tuple(x)][tuple([True]+item)]=computeScore(item)
+      sc=computeScore(item)
+      d[1][tuple(x)][tuple([False]+item)]=sc
+      d[1][tuple(x)][tuple([True]+item)]=sc
     for d2 in range(1,7):
       x[d2-1]+=1
       d[2][tuple(x)]={}
       for item in combineRoll(x):
-        d[2][tuple(x)][tuple([False]+item)]=computeScore(item)
-        d[2][tuple(x)][tuple([True]+item)]=computeScore(item)
+        sc=computeScore(item)
+        d[2][tuple(x)][tuple([False]+item)]=sc
+        d[2][tuple(x)][tuple([True]+item)]=sc
       for d3 in range(1,7):
         x[d3-1]+=1
         d[3][tuple(x)]={}
         for item in combineRoll(x):
-          d[3][tuple(x)][tuple([False]+item)]=computeScore(item)
-          d[3][tuple(x)][tuple([True]+item)]=computeScore(item)
+          sc=computeScore(item)
+          d[3][tuple(x)][tuple([False]+item)]=sc
+          d[3][tuple(x)][tuple([True]+item)]=sc
         for d4 in range(1,7):
           x[d4-1]+=1
           d[4][tuple(x)]={}
           for item in combineRoll(x):
-            d[4][tuple(x)][tuple([False]+item)]=computeScore(item)
-            d[4][tuple(x)][tuple([True]+item)]=computeScore(item)
+            sc=computeScore(item)
+            d[4][tuple(x)][tuple([False]+item)]=sc
+            d[4][tuple(x)][tuple([True]+item)]=sc
           for d5 in range(1,7):
             x[d5-1]+=1
             d[5][tuple(x)]={}
             for item in combineRoll(x):
-              d[5][tuple(x)][tuple([False]+item)]=computeScore(item)
-              d[5][tuple(x)][tuple([True]+item)]=computeScore(item)
+              sc=computeScore(item)
+              d[5][tuple(x)][tuple([False]+item)]=sc
+              d[5][tuple(x)][tuple([True]+item)]=sc
             for d6 in range(1,7):
               x[d6-1]+=1
               d[6][tuple(x)]={}
               for item in combineRoll(x):
-                d[6][tuple(x)][tuple([False]+item)]=computeScore(item)
-                d[6][tuple(x)][tuple([True]+item)]=computeScore(item)
+                sc=computeScore(item)
+                d[6][tuple(x)][tuple([False]+item)]=sc
+                d[6][tuple(x)][tuple([True]+item)]=sc
               x[d6-1]-=1
             x[d5-1]-=1
           x[d4-1]-=1
@@ -499,24 +505,23 @@ def computerSelectAction(rolled):
 def computerTrain(steps):
   tot=0
   for i in range(steps):
-    turn=computerTurn(False)
+    turn=computerTurn(True)
     tot+=turn
   return(tot/steps)
 
 def computerTest():
-  res={}
+  res=[ [0] * 12 for _ in range(12)]
   i=0.0
   for i in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]:
-    alfa=i
-    res[i]={}
+    global alfa;alfa=i
+    res[int(1+i*10)][0]=i
     for j in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]:
-      gamma=j
-      res[i][j]={}
-      for k in [1,10,100,1000,10000,100000]:
-        temp=0
-        for m in range(10):temp+=computerTrain(k);print('training: alpha= ',alfa,', gamma= ',gamma,', steps= ',k)
-        print(temp/10)
-        res[i][j][k]=temp/10
+      global gamma;gamma=j
+      res[0][int(1+j*10)]=j
+      temp=0
+      for m in range(10):global rewards;rewards=initDic();temp+=computerTrain(100000)
+      print(alfa, gamma, temp)
+      res[int(1+i*10)][int(1+j*10)]=temp/10
   print(res)
 
 
@@ -536,27 +541,29 @@ def newGame(maxScore,mode):
       if(p2score>=maxScore):print('¡¡¡YOU WIN!!!');break
     else:
       if(random.randint(1,2)==1):
+        print('Scores:');print('computer: ',p2score,' player: ',p1score)
         p1score+=playerTurn(p1score)
         p2score+=computerTurn(False)
-      else:
+      else:        
         p1score+=computerTurn(False)
+        print('Scores:');print('computer: ',p1score,' player: ',p2score)
         p2score+=playerTurn(p2score)
 
-#alfa=0.5
-#gamma=0.8
+alfa=0.5
+gamma=0.8
 #training_steps=1000
-#rewards={}
+rewards={}
 
 if __name__ == "__main__":
   if(len(argv)!=5):usage();exit(0)
+  if(int(argv[1])==3):computerTest();exit(0)
   rewards=initDic()
-  mode=int(argv[1])==1            # 1=PVP 0=PVE
-  training_steps=argv[2]          #          
-  alfa=float(argv[3])               # Learning rate {0-1}
-  gamma=float(argv[4])              # Weight given to future actions
-  if(int(argv[1])==3):computerTest()
+  mode=int(argv[1])==1    # 1=PVP 0=PVE
+  training_steps=argv[2]  #          
+  alfa=float(argv[3])     # Learning rate {0-1}
+  gamma=float(argv[4])    # Weight given to future actions
   printRules()
   if(mode==False):computerTrain(int(training_steps))
-  exit(0)
-  #newGame(4000,True)
+  newGame(4000,mode)
   #print(computeScore([False,1,1,1,1,1,1,6][1:7]))
+  exit(0)
