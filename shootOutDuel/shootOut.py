@@ -111,8 +111,8 @@ def paintActionsInfo(a1,d1,a2,d2):
   if(d2==[ 0, 0]):d2s=''
 
   if(a2=='a'):print('Player 2 advanced ',d2s)
-  if(a2=='s'):print('Player 2 shot ',d1s)
-  if(a2=='w'):print('Player 2 fisted ',d1s)
+  if(a2=='s'):print('Player 2 shot ',d2s)
+  if(a2=='w'):print('Player 2 fisted ',d2s)
   if(a2=='d'):print('Player 2 defended')
 
 def selectActions():
@@ -142,20 +142,26 @@ def advance(player,direction):
 def checkMovement(direction1, direction2):
   newpos1=list(map(add, pos[0], direction1))
   newpos2=list(map(add, pos[1], direction2))
-  return newpos2==newpos1
+  return newpos2!=newpos1
 
-def attack(player, direction, mode): #mode: True=range, False=melee
+def fist(player, direction):
+  global pos, grid, hp
+  st=pos[player-1]
+  n=list(map(add,st,direction))
+  #if(n[0]<0 or n[1]<0 or n[0]>gSize-1 or n[1]>gSize-1):return null
+  if(grid[n[0]][n[1]] !=' ' and grid[n[0]][n[1]] !='X'):receiveDamage(int(grid[n[0]][n[1]]),fistDmg);print(bcolors.RED+'A PLAYER WAS PUNCHED IN THE FACE!!'+bcolors.ENDC)
+
+def shoot(player, direction):
   global pos, grid, hp, bullets
   st=pos[player-1]
   n=list(map(add,st,direction))
-  if(mode):
-    for i in range(gSize):
-      if(n[0]<0 or n[1]<0 or n[0]>gSize-1 or n[1]>gSize-1 or grid[n[0]][n[1]]=='X'):break
-      if(grid[n[0]][n[1]] !=' '):hp[int(grid[n[0]][n[1]])-1]-=bulletDmg;print(bcolors.RED+'A PLAYER WAS SHOT IN THE FACE!!'+bcolors.ENDC)
-      n=list(map(add,n,direction))
-  else:
-    if(n[0]<0 or n[1]<0 or n[0]>gSize-1 or n[1]>gSize-1):return null
-    if(grid[n[0]][n[1]] not in [' ','X']):hp[int(grid[n[0]][n[1]])-1]-=fistDmg;print(bcolors.RED+'A PLAYER WAS PUNCHED IN THE FACE!!'+bcolors.ENDC)
+  for i in range(gSize):
+    if(n[0]<0 or n[1]<0 or n[0]>gSize-1 or n[1]>gSize-1 or grid[n[0]][n[1]]=='X'):break
+    if(grid[n[0]][n[1]] !=' '):hp[int(grid[n[0]][n[1]])-1]-=bulletDmg;print(bcolors.RED+'A PLAYER WAS SHOT IN THE FACE!!'+bcolors.ENDC)
+    n=list(map(add,n,direction))
+
+def receiveDamage(player,dmg):
+  if(not isDefending[player-1]):hp[player-1]-=dmg
 
 def resolveTurn(actions): 
   #[[(action1,direction),(action2,direction),...,(actionN,direction)],[(action1,direction),(action2,direction),...,(actionN,direction)]]
@@ -164,19 +170,22 @@ def resolveTurn(actions):
   paintInfo()
   paintGrid(grid)
   for i in range(len(actions[0])):
-    if(checkEnded()):endGame(hp.index(max(hp))+1)
+    if(checkEnded()):endGame(hp.index(max(hp))+1 if max(hp)>0 else 0)
     a1=actions[0][i][0]
     d1=actions[0][i][1]
     a2=actions[1][i][0]
     d2=actions[1][i][1]
     isDefending=[a1=='d',a2=='d']
-    if(a1=='s' or a1=='f'): attack(1,d1,a1=='s')
-    if(a2=='s' or a2=='f'): attack(2,d2,a2=='s')
     if(a1=='a' and a2=='a'): 
       if(checkMovement(d1,d2)): advance(1,d1);advance(2,d2)
     else: 
       if(a1=='a'): advance(1,d1)
       if(a2=='a'): advance(2,d2)
+    if(a1=='f'): fist(1,d1)
+    if(a2=='f'): fist(2,d2)
+    if(checkEnded()):endGame(hp.index(max(hp))+1 if max(hp)>0 else 0)
+    if(a1=='s'): shoot(1,d1)
+    if(a2=='s'): shoot(2,d2)
     print('Action ',i,':')
     paintActionsInfo(a1,d1,a2,d2)
     paintInfo()
