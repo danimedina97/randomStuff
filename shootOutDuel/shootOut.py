@@ -133,6 +133,7 @@ def advance(player,direction):
   global pos,grid
   oldpos=pos[player-1]
   newpos=list(map(add, oldpos,direction))
+  if(newpos[0]<0 or newpos[0]>=gSize or newpos[1]<0 or newpos[1]>=gSize):return
   if(grid[newpos[0]][newpos[1]]==' '):
     grid[newpos[0]][newpos[1]]=str(player)
     grid[oldpos[0]][oldpos[1]]=' '
